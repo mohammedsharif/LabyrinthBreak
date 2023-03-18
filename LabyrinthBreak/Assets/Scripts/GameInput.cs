@@ -1,10 +1,15 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class GameInput : MonoBehaviour
 {
     public static GameInput Instance {get; private set;}
+
+    public event EventHandler OnShootPerformed;
+    public event EventHandler OnInteractPerformed;  
 
     private PlayerInputActions playerInputActions;
 
@@ -14,6 +19,19 @@ public class GameInput : MonoBehaviour
 
         playerInputActions = new PlayerInputActions();
         playerInputActions.Enable();
+
+        playerInputActions.Player.Shoot.performed += PlayerShoot_Performed;
+        playerInputActions.Player.Interact.performed += PlayerInteract_Performed;
+    }
+
+    private void PlayerInteract_Performed(InputAction.CallbackContext obj)
+    {
+        OnInteractPerformed?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void PlayerShoot_Performed(InputAction.CallbackContext obj)
+    {
+        OnShootPerformed?.Invoke(this, EventArgs.Empty);
     }
 
     public Vector2 GetMovementVectorNormalized()
@@ -34,7 +52,6 @@ public class GameInput : MonoBehaviour
 
         mouseVector = mouseVector.normalized;
 
-        Debug.Log(mouseVector);
         return mouseVector;
     }
 }
