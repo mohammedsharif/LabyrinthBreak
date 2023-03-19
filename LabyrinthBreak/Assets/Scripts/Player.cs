@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    public static Player Instance;
+
     [SerializeField]private GameObject cameraObject;
     [SerializeField]private Transform leftHand;
     [SerializeField]private Transform rightHand;
@@ -14,7 +16,12 @@ public class Player : MonoBehaviour
 
     private float movementSpeed = 5f;
     private float mouseSensitivityX = 100f, mouseSensitivityY = 50f;
-    private float yRotate = 0f, xRotate = 0, minAngle = -30, maxAngle = 30;
+    private float yRotate = 0f, xRotate = 0, minAngle = -50, maxAngle = 50;
+
+    private void Awake() 
+    {
+        Instance = this;    
+    }
 
     private void Start() 
     {
@@ -24,7 +31,7 @@ public class Player : MonoBehaviour
 
     private void GameInput_OnInteractPerformed(object sender, EventArgs e)
     {
-        float interactDistance = 10f;
+        float interactDistance = 5f;
 
         if(this.weapon == null)
         {
