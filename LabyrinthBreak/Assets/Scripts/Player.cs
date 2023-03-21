@@ -7,6 +7,12 @@ public class Player : MonoBehaviour
 {
     public static Player Instance;
 
+    public event EventHandler<EventArgsOnHealthChanged> OnHealthChanged;
+    public class EventArgsOnHealthChanged : EventArgs
+    {
+        public int maxHealth;
+    }
+
     [SerializeField]private GameObject cameraObject;
     [SerializeField]private Transform leftHand;
     [SerializeField]private Transform rightHand;
@@ -14,13 +20,18 @@ public class Player : MonoBehaviour
 
     private Weapon weapon;
 
+    private int health;
+    private int maxHealth;
+
     private float movementSpeed = 5f;
     private float mouseSensitivityX = 100f, mouseSensitivityY = 50f;
     private float yRotate = 0f, xRotate = 0, minAngle = -50, maxAngle = 50;
 
     private void Awake() 
     {
-        Instance = this;    
+        Instance = this;
+        health = 100;
+        maxHealth = 100;    
     }
 
     private void Start() 
@@ -92,5 +103,26 @@ public class Player : MonoBehaviour
         rotateVector = new Vector3(yRotate, xRotate, 0);
         cameraObject.transform.eulerAngles = rotateVector;
     }
-    
+
+    public void SetHealth(int health)
+    {  
+        if(this.health - health > 0)
+        {
+            this.health = health;
+
+            OnHealthChanged?.Invoke(this, new EventArgsOnHealthChanged{
+                maxHealth = maxHealth
+            });
+        }
+    }
+
+    public int GetHealth()
+    {
+        return health;
+    }
+
+    internal void SetHealth(object value)
+    {
+        throw new NotImplementedException();
+    }
 }

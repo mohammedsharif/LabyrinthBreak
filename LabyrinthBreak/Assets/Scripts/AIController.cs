@@ -1,9 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
-public class Enemy : MonoBehaviour
+public class AIController : MonoBehaviour
 {
+    [SerializeField]private NavMeshAgent agent;
+
     public enum State
     {
         Idle,
@@ -11,16 +14,16 @@ public class Enemy : MonoBehaviour
         Chasing,
     }
 
-    [SerializeField] private LayerMask layerMask;
-
     private State state;
+    
     private Vector3 startingPosition;
     private Vector3 roamingPosition;
     private float movingSpeed = 2.5f;
-
-    private int health;
+    private float stoppingDistance = 1f;
     private float maxAttackingRange = 10f;
     private float maxChasingRange = 15f;
+
+    private int health;
     private int attackPower = 10;
     private float attackTimer;
     private float maxAttackTimer = 1f;
@@ -29,10 +32,13 @@ public class Enemy : MonoBehaviour
     {
         state = State.Idle;
         startingPosition = transform.position;
+        agent.stoppingDistance = stoppingDistance;
+        agent.speed = movingSpeed;
         attackTimer = maxAttackTimer;
     }
 
-    private void Update() 
+    // Update is called once per frame
+    void Update()
     {
         switch(state)
         {
@@ -41,41 +47,32 @@ public class Enemy : MonoBehaviour
                 state = State.Moving;
                 break;
             case State.Moving:
-                MoveTo(roamingPosition, movingSpeed);
+                agent.destination = roamingPosition;
+                if(agent.remainingDistance <= agent.stoppingDistance)
+                {
+                    state = State.Idle;
+                }
                 if(Vector3.Distance(transform.position, Player.Instance.transform.position) <= maxChasingRange)
                 {
                     state = State.Chasing;
                 }
                 break;
             case State.Chasing:
-                attackTimer -= Time.deltaTime;
-                MoveTo(Player.Instance.transform.position, movingSpeed, maxChasingRange);
-                if(Vector3.Distance(transform.position, Player.Instance.transform.position) <= maxAttackingRange)
+                agent.destination = Player.Instance.transform.position;
+                if(agent.remainingDistance > maxChasingRange)
                 {
+                    state = State.Idle;
+                }
+                if(agent.remainingDistance <= maxAttackingRange)
+                {
+                    attackTimer -= Time.deltaTime;
                     if(attackTimer <= 0f)
                     {
                         Attack();
                         attackTimer = maxAttackTimer;
                     }
-
-                }
-                else
-                {
-                    state = State.Idle;
                 }
                 break;
-        }   
-    }
-
-    private void Attack()
-    {
-        Player.Instance.SetHealth(Player.Instance.GetHealth() - attackPower);
-        if(Physics.Raycast(transform.position, transform.forward, out RaycastHit raycastHit, maxAttackingRange))
-        {
-            if(raycastHit.transform.TryGetComponent(out Player player))
-            {
-                Player.Instance.SetHealth(player.GetHealth() - attackPower);
-            }
         }
     }
 
@@ -89,28 +86,15 @@ public class Enemy : MonoBehaviour
         return roamingPosition;
     }
 
-    private void MoveTo(Vector3 targetPosition, float speed, float range = 1f, float maxDistance = 1f)
-    {   
-        transform.LookAt(targetPosition);
-
-        //move to the position if the position and current position are not same and there is no object in the way except player
-        if(!Physics.Raycast(transform.position, transform.forward, range, layerMask) && (targetPosition - transform.position).magnitude > maxDistance)
-        {
-            transform.Translate(Vector3.forward * speed * Time.deltaTime);
-        }
-        else
-        {
-            state = State.Idle;
-        }
-    }
-
-    private void SetHealth(int health)
+    private void Attack()
     {
-        this.health = health;
-    }
-
-    private int GetHealth()
-    {
-        return health;
+        Player.Instance.SetHealth(Player.Instance.GetHealth() - attackPower);
+        if(Physics.Raycast(transform.position, transform.forward, out RaycastHit raycastHit, maxAttackingRange))
+        {
+            if(raycastHit.transform.TryGetComponent(out Player player))
+            {
+                Player.Instance.SetHealth(player.GetHealth() - attackPower);
+            }
+        }
     }
 }
