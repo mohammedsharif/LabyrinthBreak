@@ -16,6 +16,8 @@ public class AIController : MonoBehaviour
 
     private State state;
     
+    [SerializeField] private LayerMask playerMask;
+
     private Vector3 startingPosition;
     private Vector3 roamingPosition;
     private float movingSpeed = 2.5f;
@@ -23,10 +25,16 @@ public class AIController : MonoBehaviour
     private float maxAttackingRange = 10f;
     private float maxChasingRange = 15f;
 
-    private int health;
+    private int health = 100;
+    private int maxHealth;
     private int attackPower = 10;
     private float attackTimer;
     private float maxAttackTimer = 1f;
+
+    private void Player_OnAttackTouched(object sender, Player.EventArgsOnAttackTouched e)
+    {
+        SetHealth(health - e.attackPower);   
+    }
 
     private void Start() 
     {
@@ -35,6 +43,9 @@ public class AIController : MonoBehaviour
         agent.stoppingDistance = stoppingDistance;
         agent.speed = movingSpeed;
         attackTimer = maxAttackTimer;
+        maxHealth = health;
+
+        Player.Instance.OnAttackTouched += Player_OnAttackTouched; 
     }
 
     // Update is called once per frame
@@ -74,6 +85,9 @@ public class AIController : MonoBehaviour
                 }
                 break;
         }
+
+        if(health <= 0)
+            Destroy(gameObject);
     }
 
     private Vector3 GetRoamingPosition()
@@ -88,13 +102,31 @@ public class AIController : MonoBehaviour
 
     private void Attack()
     {
-        Player.Instance.SetHealth(Player.Instance.GetHealth() - attackPower);
-        if(Physics.Raycast(transform.position, transform.forward, out RaycastHit raycastHit, maxAttackingRange))
+        if(Physics.Raycast(transform.position, transform.forward, maxAttackingRange, playerMask))
         {
-            if(raycastHit.transform.TryGetComponent(out Player player))
-            {
-                Player.Instance.SetHealth(player.GetHealth() - attackPower);
-            }
+            Player.Instance.SetHealth(Player.Instance.GetHealth() - attackPower);
         }
+    }
+
+    public void SetHealth(int health)
+    {
+        if(health < 0)
+        {
+            this.health =  0;
+        }
+        else
+        {
+            this.health = health;
+        }
+    }
+
+    public int GetHealth()
+    {
+        return health;
+    }
+
+    public int GetMaxHealth()
+    {
+        return maxHealth;
     }
 }

@@ -19,6 +19,7 @@ public class Enemy : MonoBehaviour
     private float movingSpeed = 2.5f;
 
     private int health;
+    private int maxHealth;
     private float maxAttackingRange = 10f;
     private float maxChasingRange = 15f;
     private int attackPower = 10;
@@ -112,5 +113,10 @@ public class Enemy : MonoBehaviour
     private int GetHealth()
     {
         return health;
+    }
+
+    private int GetMaxHealth()
+    {
+        return maxHealth;
     }
 }

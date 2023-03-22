@@ -26,7 +26,6 @@ public class Gun : Weapon
         if(bulletCount > 0)
         {
             bulletCount--;
-            Debug.Log(bulletCount);
         }
     }
 

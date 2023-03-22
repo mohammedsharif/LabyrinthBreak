@@ -12,20 +12,29 @@ public class Player : MonoBehaviour
     {
         public int maxHealth;
     }
+    public event EventHandler<EventArgsOnAttackTouched> OnAttackTouched;
+    public class EventArgsOnAttackTouched : EventArgs
+    {
+        public int attackPower;
+    }
 
     [SerializeField]private GameObject cameraObject;
     [SerializeField]private Transform leftHand;
     [SerializeField]private Transform rightHand;
     [SerializeField]private LayerMask equippableLayerMask;
+    [SerializeField]private LayerMask  enemyLayerMask;
 
     private Weapon weapon;
 
     private int health;
     private int maxHealth;
+    private int attackPower = 10;
 
     private float movementSpeed = 5f;
     private float mouseSensitivityX = 100f, mouseSensitivityY = 50f;
     private float yRotate = 0f, xRotate = 0, minAngle = -50, maxAngle = 50;
+
+    private float maxAttackingRange = 10f;
 
     private void Awake() 
     {
@@ -68,6 +77,13 @@ public class Player : MonoBehaviour
         {
             Gun gun = weapon as Gun;
             gun.Shoot();
+
+            if(Physics.Raycast(cameraObject.transform.position, cameraObject.transform.forward, maxAttackingRange, enemyLayerMask))
+            {
+                OnAttackTouched?.Invoke(this, new EventArgsOnAttackTouched{
+                    attackPower = attackPower
+                });
+            }
         }
     }
 
@@ -106,23 +122,22 @@ public class Player : MonoBehaviour
 
     public void SetHealth(int health)
     {  
-        if(this.health - health > 0)
+        if(health < 0)
+        {
+            this.health = 0;
+        }
+        else
         {
             this.health = health;
-
-            OnHealthChanged?.Invoke(this, new EventArgsOnHealthChanged{
-                maxHealth = maxHealth
-            });
         }
+
+        OnHealthChanged?.Invoke(this, new EventArgsOnHealthChanged{
+            maxHealth = maxHealth
+        });
     }
 
     public int GetHealth()
     {
         return health;
-    }
-
-    internal void SetHealth(object value)
-    {
-        throw new NotImplementedException();
     }
 }
